@@ -21,6 +21,7 @@
     var scrollOffsetAttr = 'scrollTop';
     var sizeAttr = 'height';
     var offsetAttr = 'top';
+    var pluginUniqueName;
 
     options = $.extend({}, $.fn[pluginName].defaults, options);
 
@@ -34,6 +35,8 @@
         sizeAttr = 'width';
         offsetAttr = 'left';
       }
+
+      pluginUniqueName = pluginName + new Date().getUTCMilliseconds();
 
       $el.prepend('<div class="tse-scrollbar"><div class="drag-handle"></div></div>');
       $scrollbarEl = $el.find('.tse-scrollbar:first');
@@ -56,7 +59,7 @@
 
       resizeScrollbar();
 
-      $(window).on('resize.trackpadScollEmulator', recalculate);
+      $(window).on('resize.' + pluginUniqueName, recalculate);
 
       if (!options.autoHide) {
         showScrollbar();
@@ -281,7 +284,7 @@
       $scrollContentEl.remove();
       $contentEl.css({'height': $el.height()+'px', 'overflow-y': 'scroll'});
 
-      $(window).off('resize.trackpadScollEmulator');
+      $(window).off('resize.' + pluginUniqueName, recalculate);
 
       hook('onDestroy');
       $el.removeData('plugin_' + pluginName);
