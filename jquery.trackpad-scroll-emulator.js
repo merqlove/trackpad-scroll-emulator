@@ -23,6 +23,11 @@
     var offsetAttr = 'top';
     var pluginUniqueName;
 
+    // Browser detect
+    var macosxffRe = /[\s\S]*Macintosh[\s\S]*\) Gecko[\s\S]*/;
+    var isMacFF = macosxffRe.test(window.navigator.userAgent);
+    var isFF = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
     options = $.extend({}, $.fn[pluginName].defaults, options);
 
     /**
@@ -64,6 +69,8 @@
       if (!options.autoHide) {
         showScrollbar();
       }
+
+      hook('onInit');
     }
 
     /**
@@ -142,7 +149,10 @@
      */
     function onScrolled(e) {
       flashScrollbar();
-      checkScrollEnd();
+
+      if(!checkScrollTop()){
+        checkScrollEnd();
+      }
     }
 
     function checkScrollEnd() {
@@ -154,6 +164,17 @@
       if (endReached) {
         hook('onScrollEnd');
       }
+    }
+
+    function checkScrollTop() {
+      var scrollOffset = $scrollContentEl[scrollOffsetAttr](); // Either scrollTop() or scrollLeft().
+
+      var topReached = scrollOffset <= options.scrollTopBuffer;
+
+      if (topReached) {
+        hook('onScrollTop');
+      }
+      return topReached;
     }
 
     /**
@@ -249,7 +270,9 @@
       // On OS X if the scrollbar is set to auto hide it will have zero width. On webkit we can still
       // hide it using ::-webkit-scrollbar { width:0; height:0; } but there is no moz equivalent. So we're
       // forced to sniff Firefox and return a hard-coded scrollbar width. I know, I know...
-      if (width === widthMinusScrollbars && navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+      if (width === widthMinusScrollbars && isMacFF) {
+        return 20;
+      } else if (width === widthMinusScrollbars && isFF) {
         return 17;
       }
       return (width - widthMinusScrollbars);
@@ -304,6 +327,7 @@
     return {
       option: option,
       destroy: destroy,
+      hide: hideScrollbar,
       recalculate: recalculate
     };
   }
@@ -338,7 +362,9 @@
     onInit: function() {},
     onDestroy: function() {},
     onScrollEnd: function() {},
+    onScrollTop: function() {},
     scrollBuffer: 50,
+    scrollTopBuffer: 0,
     wrapContent: true,
     autoHide: true
   };
